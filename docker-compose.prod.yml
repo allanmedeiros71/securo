@@ -137,19 +137,22 @@ services:
       # whose own "generate FQDN" UI doesn't reliably turn into Traefik
       # labels on this compose file. Opt-in only: set TRAEFIK_ENABLE=true
       # and FRONTEND_DOMAIN (bare domain, no protocol) to use them.
+      # TRAEFIK_RESOURCE_NAME must be unique per deployment if multiple
+      # Securo instances share the same Traefik/Coolify proxy, otherwise
+      # their router/service names collide.
       - traefik.enable=${TRAEFIK_ENABLE:-false}
       - traefik.docker.network=${TRAEFIK_NETWORK:-securo_default}
-      - traefik.http.routers.securo-frontend-http.rule=Host(`${FRONTEND_DOMAIN:-localhost}`)
-      - traefik.http.routers.securo-frontend-http.entrypoints=http
-      - traefik.http.routers.securo-frontend-http.middlewares=securo-frontend-https-redirect
-      - traefik.http.routers.securo-frontend-http.service=securo-frontend
-      - traefik.http.middlewares.securo-frontend-https-redirect.redirectscheme.scheme=https
-      - traefik.http.routers.securo-frontend-https.rule=Host(`${FRONTEND_DOMAIN:-localhost}`)
-      - traefik.http.routers.securo-frontend-https.entrypoints=https
-      - traefik.http.routers.securo-frontend-https.tls=true
-      - traefik.http.routers.securo-frontend-https.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}
-      - traefik.http.routers.securo-frontend-https.service=securo-frontend
-      - traefik.http.services.securo-frontend.loadbalancer.server.port=8080
+      - traefik.http.routers.${TRAEFIK_RESOURCE_NAME:-securo-frontend}-http.rule=Host(`${FRONTEND_DOMAIN:-localhost}`)
+      - traefik.http.routers.${TRAEFIK_RESOURCE_NAME:-securo-frontend}-http.entrypoints=http
+      - traefik.http.routers.${TRAEFIK_RESOURCE_NAME:-securo-frontend}-http.middlewares=${TRAEFIK_RESOURCE_NAME:-securo-frontend}-https-redirect
+      - traefik.http.routers.${TRAEFIK_RESOURCE_NAME:-securo-frontend}-http.service=${TRAEFIK_RESOURCE_NAME:-securo-frontend}
+      - traefik.http.middlewares.${TRAEFIK_RESOURCE_NAME:-securo-frontend}-https-redirect.redirectscheme.scheme=https
+      - traefik.http.routers.${TRAEFIK_RESOURCE_NAME:-securo-frontend}-https.rule=Host(`${FRONTEND_DOMAIN:-localhost}`)
+      - traefik.http.routers.${TRAEFIK_RESOURCE_NAME:-securo-frontend}-https.entrypoints=https
+      - traefik.http.routers.${TRAEFIK_RESOURCE_NAME:-securo-frontend}-https.tls=true
+      - traefik.http.routers.${TRAEFIK_RESOURCE_NAME:-securo-frontend}-https.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}
+      - traefik.http.routers.${TRAEFIK_RESOURCE_NAME:-securo-frontend}-https.service=${TRAEFIK_RESOURCE_NAME:-securo-frontend}
+      - traefik.http.services.${TRAEFIK_RESOURCE_NAME:-securo-frontend}.loadbalancer.server.port=8080
 
   celery-worker:
     <<: *backend-base
