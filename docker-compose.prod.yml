@@ -144,8 +144,12 @@ services:
       # stack share isn't guaranteed to be named `securo_default` (it isn't,
       # under some Coolify setups) — find it with `docker network ls` or
       # `docker inspect <traefik-container> --format '{{json .NetworkSettings.Networks}}'`
-      # and set it explicitly. Left unset, Traefik falls back to
-      # auto-detecting the one network this container shares with it.
+      # and set it explicitly. Left unset (the empty value below is
+      # equivalent to omitting the label), Traefik auto-detects the network
+      # when this container is on exactly one — the default here, since
+      # `frontend` isn't attached to any other network out of the box. If
+      # you've added `frontend` to additional networks yourself, you MUST
+      # set TRAEFIK_NETWORK, or Traefik's choice among them is undefined.
       - traefik.enable=${TRAEFIK_ENABLE:-false}
       - traefik.docker.network=${TRAEFIK_NETWORK:-}
       - traefik.http.routers.${TRAEFIK_RESOURCE_NAME:-securo-frontend}-http.rule=Host(`${FRONTEND_DOMAIN:-localhost}`)
