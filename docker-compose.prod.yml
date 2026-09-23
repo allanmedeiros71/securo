@@ -132,6 +132,24 @@ services:
     depends_on:
       - backend
     restart: unless-stopped
+    labels:
+      # Static Traefik routing labels for reverse proxies (e.g. Coolify)
+      # whose own "generate FQDN" UI doesn't reliably turn into Traefik
+      # labels on this compose file. Opt-in only: set TRAEFIK_ENABLE=true
+      # and FRONTEND_DOMAIN (bare domain, no protocol) to use them.
+      - traefik.enable=${TRAEFIK_ENABLE:-false}
+      - traefik.docker.network=${TRAEFIK_NETWORK:-securo_default}
+      - traefik.http.routers.securo-frontend-http.rule=Host(`${FRONTEND_DOMAIN:-localhost}`)
+      - traefik.http.routers.securo-frontend-http.entrypoints=http
+      - traefik.http.routers.securo-frontend-http.middlewares=securo-frontend-https-redirect
+      - traefik.http.routers.securo-frontend-http.service=securo-frontend
+      - traefik.http.middlewares.securo-frontend-https-redirect.redirectscheme.scheme=https
+      - traefik.http.routers.securo-frontend-https.rule=Host(`${FRONTEND_DOMAIN:-localhost}`)
+      - traefik.http.routers.securo-frontend-https.entrypoints=https
+      - traefik.http.routers.securo-frontend-https.tls=true
+      - traefik.http.routers.securo-frontend-https.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}
+      - traefik.http.routers.securo-frontend-https.service=securo-frontend
+      - traefik.http.services.securo-frontend.loadbalancer.server.port=8080
 
   celery-worker:
     <<: *backend-base
