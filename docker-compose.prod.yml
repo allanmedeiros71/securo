@@ -140,8 +140,14 @@ services:
       # TRAEFIK_RESOURCE_NAME must be unique per deployment if multiple
       # Securo instances share the same Traefik/Coolify proxy, otherwise
       # their router/service names collide.
+      # TRAEFIK_NETWORK has no default: the Docker network Traefik and this
+      # stack share isn't guaranteed to be named `securo_default` (it isn't,
+      # under some Coolify setups) — find it with `docker network ls` or
+      # `docker inspect <traefik-container> --format '{{json .NetworkSettings.Networks}}'`
+      # and set it explicitly. Left unset, Traefik falls back to
+      # auto-detecting the one network this container shares with it.
       - traefik.enable=${TRAEFIK_ENABLE:-false}
-      - traefik.docker.network=${TRAEFIK_NETWORK:-securo_default}
+      - traefik.docker.network=${TRAEFIK_NETWORK:-}
       - traefik.http.routers.${TRAEFIK_RESOURCE_NAME:-securo-frontend}-http.rule=Host(`${FRONTEND_DOMAIN:-localhost}`)
       - traefik.http.routers.${TRAEFIK_RESOURCE_NAME:-securo-frontend}-http.entrypoints=http
       - traefik.http.routers.${TRAEFIK_RESOURCE_NAME:-securo-frontend}-http.middlewares=${TRAEFIK_RESOURCE_NAME:-securo-frontend}-https-redirect
